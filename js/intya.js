@@ -360,7 +360,7 @@
 				 	prevented = prevented && moved;
 				 	if (!$(o).preventCollision(oo)) {
 				 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
-				 		$(o).coords({x: oc.x, y: oc.y});
+				 		$(o).coords({x: G.oc.x, y: G.oc.y});
 				 		prevented = false;
 				 	}
 				}
