@@ -150,7 +150,7 @@
 			start: function(e) {
 			},
 			drag: function(e) {
-				$(this).children().preventCollision(o, true);
+				$(this).children().preventCollision(o);
 				Mouse.move(e);
 				$(this).children().data('v', {x: 0, y: 0});
 			},
@@ -186,7 +186,7 @@
 					x: Math.max(Math.min(cw-xy.r, xy.x),xy.r),
 					y: Math.max(Math.min(ch-xy.r, xy.y),xy.r)
 				});
-				$(this).preventCollision(o, true);
+				$(this).preventCollision(o);
 				opts.step();
 			},
 			complete: function() {
@@ -343,7 +343,7 @@
 		return cb(o, G);
 	}
 	
-	$.fn.preventCollision = function(oo, pushed) {
+	$.fn.preventCollision = function(oo) {
 		var s = this,
 			prevented = true;
 		oo = oo.not(this);
@@ -354,16 +354,16 @@
 				if (G.overlap) {
 					if (G.ident) {
 						var alpha = Math.random()*2*Math.PI;
-						return $(o).coords({x: G.sc.x + G.f*Math.sin(alpha), y: G.sc.y + G.f*Math.cos(alpha)}, pushed);
+						return $(o).coords({x: G.sc.x + G.f*Math.sin(alpha), y: G.sc.y + G.f*Math.cos(alpha)}, true);
 					}
 					
-					return $(o).coords(G.z, pushed);
+					return $(o).coords(G.z, true);
 				}
 				return true;
 			});
 		 	prevented = prevented && moved;
 		 	
-		 	if (!$(this).preventCollision(oo, pushed)) {
+		 	if (!$(this).preventCollision(oo)) {
 		 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
 		 		$(this).coords({x: oc.x, y: oc.y});
 		 		prevented = false;
