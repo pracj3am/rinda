@@ -32,8 +32,8 @@
 		}
 	}
 	
-	var Coeff = function(vx, vy) {
-		var v2 = pow(vx,2)+pow(vy,2)
+	var Coeff = function(v) {
+		var v2 = pow(v.x,2)+pow(v.y,2)
 		
 		return Math.exp(-sqrt(v2)/fps/10); 
 	}
@@ -231,7 +231,7 @@
 				ncoords = coords;
 			} else {
 				// změna rychlosti
-				var c = Coeff(this.data('v').x, this.data('v').y);
+				var c = Coeff(this.data('v'));
 				if (coords.y-r<0) {
 					//horní strana
 					this.data('v', {x: this.data('v').x, y: -this.data('v').y*c});
@@ -308,98 +308,129 @@
 		return ocoords;
 	}
 	
+	$.fn.handleCollision = function(s, cb) {
+		var sc = s.coords(), sx = sc.x, sy = sc.y,
+			oc = this.coords(), ox = oc.x, oy = oc.y,
+			o = this;
+			G = new Object; //geometrie srážky
+
+		G.sc = sc;
+		G.oc = oc;
+		G.f = sc.r + oc.r; //vzdálenost středů
+		// if overlap
+		if (sqrt(pow(sx-ox,2)+pow(sy-oy,2)) < G.f) {
+			G.overlap = true;
+			if (abs(sy-oy) < 0.001 && abs(sx-ox) < 0.001) {
+				G.ident = true;			
+			} else {
+				G.ident = false;
+				G.tg = (sy-oy)/(sx-ox);
+				if (abs(G.tg)>1000) {
+					G.cos = 0;
+					G.sin = 1;
+					G.z = {x: ox, y: oy>sy ? sy+G.f : sy-G.f}; // bod pro this tak, aby se kružnice dotýkaly
+				} else {
+					G.cos = 1/sqrt(pow(G.tg,2)+1);
+					G.sin = G.tg*G.cos;
+					var x1 = sx<ox ? sx+G.f*G.cos : sx-G.f*G.cos;
+					G.z = {x: x1, y: G.tg*x1 + (sx*oy-sy*ox)/(sx-ox)}; // bod pro this tak, aby se kružnice dotýkaly
+					
+				}
+			}
+		} else {
+			G.overlap = false;
+		}
+		return cb(o, G);
+	}
+	
 	$.fn.preventCollision = function(oo, pushed) {
-		var sc = this.coords(),
-			sx = sc.x, sy = sc.y,
-			sv = $(this).data('v'),
-			s = this,
+		var s = this,
 			prevented = true;
 		oo = oo.not(this);
 		oo.each(function(){
-			var oc = $(this).coords(), gu = $(),
-				ox = oc.x, oy = oc.y,
-				ov = $(this).data('v'),
-				f = sc.r + oc.r,
-				over = sqrt(pow(sx-ox,2)+pow(sy-oy,2)) < f;
-			if (over) {
-				var moved;
-				if (abs(sy-oy) < 0.001 && abs(sx-ox) < 0.001) {
-					//objekty se identicky překrývají
-					var alpha = Math.random()*2*Math.PI;
-					moved = $(this).coords({x: sx + f*Math.sin(alpha), y: sy + f*Math.cos(alpha)}, pushed);
-				} else {
-					var tg = (sy-oy)/(sx-ox),
-						sco = Coeff(sv.x, sv.y),
-						oco = Coeff(ov.x, ov.y),
+			var oc = $(this).coords(); 
+			moved = 
+			$(this).handleCollision(s, function(o, G){
+				if (G.overlap) {
+					if (G.ident) {
+						var alpha = Math.random()*2*Math.PI;
+						return $(o).coords({x: G.sc.x + G.f*Math.sin(alpha), y: G.sc.y + G.f*Math.cos(alpha)}, pushed);
+					}
+					
+					return $(o).coords(G.z, pushed);
+				}
+				return true;
+			});
+		 	prevented = prevented && moved;
+		 	
+		 	if (!$(this).preventCollision(oo, pushed)) {
+		 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
+		 		$(this).coords({x: oc.x, y: oc.y});
+		 		prevented = false;
+		 	}
+			
+		});
+		
+		return prevented;
+	}
+	
+	$.fn.tryMove = function(coords) {
+		var s = this,
+			sCoords = $(this).coords(),
+			oo = o.not(this),
+			move = true;
+			
+		$(this).coords(coords);
+		oo.each(function(){
+			var collided =
+			$(this).handleCollision(s, function(o, G){
+				if (G.overlap && !G.ident) {
+					var sv = $(s).data('v'), ov = $(o).data('v'),
+						sco = Coeff(sv),
+						oco = Coeff(ov),
+						dv = ov.x*G.cos+ov.y*G.sin-sv.x*G.cos-sv.y*G.sin,
 						m;
 					
 					// "relativní hmotnost"
 					if ($(s).is('.clicked')) {
 						m = 0;
-					} else if ($(this).is('.clicked')) {
+					} else if ($(o).is('.clicked')) {
 						m = 1;
 					} else {
 						m = .5;
 					}
-					if (abs(tg)>1000) {
-						moved = $(this).coords({x: ox, y: oy>sy ? sy+f : sy-f}, pushed);
-				 		//změna rychlosti
-				 		var
-							dv = ov.y-sv.y;
-						$(s).data('v', {
-							x: sv.x,
-							y: (sv.y+2*m*dv)*sco
-						});
-						$(this).data('v', {
-							x: ov.x,
-							y: (ov.y-2*(1-m)*dv)*oco
-						});
-
-					} else {
-						var //přímka, na které leží středy kruhů
-							b = (sx*oy-sy*ox)/(sx-ox),
-							cos = 1/sqrt(pow(tg,2)+1),
-							sin = tg*cos,
-							x1 = sx<ox ? sx+f*cos : sx-f*cos; //polohy na přímce tak, aby se kružnice dotýkaly
-		
-				 		moved = $(this).coords({x: x1, y: tg*x1+b}, pushed);
-				 		
-				 		//změna rychlosti
-				 		var
-							dv = ov.x*cos+ov.y*sin-sv.x*cos-sv.y*sin;
-						$(s).data('v', {
-							x: (sv.x+2*m*dv*cos)*sco,
-							y: (sv.y+2*m*dv*sin)*sco
-						});
-						$(this).data('v', {
-							x: (ov.x-2*(1-m)*dv*cos)*oco,
-							y: (ov.y-2*(1-m)*dv*sin)*oco
-						});
-				 		
-				 	}
- 				}
-			 	prevented = prevented && moved;
-			 	
-			 	if (!$(this).preventCollision(oo, pushed)) {
-			 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
-			 		$(this).coords({x: ox, y: oy});
-			 		prevented = false;
-			 	}
-			}
+					
+			 		//změna rychlosti
+					$(s).data('v', {
+						x: (sv.x+2*m*dv*G.cos)*sco,
+						y: (sv.y+2*m*dv*G.sin)*sco
+					});
+					$(o).data('v', {
+						x: (ov.x-2*(1-m)*dv*G.cos)*oco,
+						y: (ov.y-2*(1-m)*dv*G.sin)*oco
+					});
+					return true;
+				}
+				return false;
+			});
+			move = move && !collided;
+			
 		});
 		
-		return prevented;
+		if (!move) {
+			$(this).coords(sCoords);
+		}
+		return this;
 	}
 
 	$.fn.frameChange = function() {
 		var o = this;
 		this.each(function(index){
 			var c = $(this).coords();
-			$(this).coords({
+			$(this).tryMove({
 				x: c.x + $(this).data('v').x,
 				y: c.y + $(this).data('v').y
 			});
-			$(this).preventCollision(o);
 		});
 	}
 
