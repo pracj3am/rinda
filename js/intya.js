@@ -214,8 +214,8 @@
 	}
 	
 	$.fn.coords = function(coords, pushed) {
-		var pos = this.parent().position(),
-			ocoords = {x: pos.left, y: pos.top, r: this.width()/2};
+		var pos = this.parent().position();
+		var ocoords = {x: pos.left, y: pos.top, r: this.width()/2};
 		
 		//objekt je chtěn na nové pozici
 		if (typeof coords == 'object') {
@@ -309,7 +309,7 @@
 	}
 	
 	$.fn.handleCollision = function(s, cb) {
-		var sc = s.coords(), sx = sc.x, sy = sc.y,
+		var sc = $(s).coords(), sx = sc.x, sy = sc.y,
 			oc = this.coords(), ox = oc.x, oy = oc.y,
 			o = this;
 			G = new Object; //geometrie srážky
@@ -342,7 +342,7 @@
 		}
 		return cb(o, G);
 	}
-	
+
 	$.fn.preventCollision = function(oo) {
 		var s = this,
 			prevented = true;
@@ -358,14 +358,14 @@
 						moved = $(o).coords(G.z, true); 
 					}
 				 	prevented = prevented && moved;
-				 	if (!$(this).preventCollision(oo)) {
+				 	if (!$(o).preventCollision(oo)) {
 				 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
-				 		$(this).coords({x: oc.x, y: oc.y});
+				 		$(o).coords({x: oc.x, y: oc.y});
 				 		prevented = false;
 				 	}
 				}
 			});
-			
+
 		});
 		
 		return prevented;
