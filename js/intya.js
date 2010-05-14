@@ -348,26 +348,23 @@
 			prevented = true;
 		oo = oo.not(this);
 		oo.each(function(){
-			var oc = $(this).coords(); 
-			moved = 
 			$(this).handleCollision(s, function(o, G){
 				if (G.overlap) {
+					var moved;
 					if (G.ident) {
 						var alpha = Math.random()*2*Math.PI;
-						return $(o).coords({x: G.sc.x + G.f*Math.sin(alpha), y: G.sc.y + G.f*Math.cos(alpha)}, true);
+						moved = $(o).coords({x: G.sc.x + G.f*Math.sin(alpha), y: G.sc.y + G.f*Math.cos(alpha)}, true);
+					} else {
+						moved = $(o).coords(G.z, true); 
 					}
-					
-					return $(o).coords(G.z, true);
+				 	prevented = prevented && moved;
+				 	if (!$(this).preventCollision(oo)) {
+				 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
+				 		$(this).coords({x: oc.x, y: oc.y});
+				 		prevented = false;
+				 	}
 				}
-				return true;
 			});
-		 	prevented = prevented && moved;
-		 	
-		 	if (!$(this).preventCollision(oo)) {
-		 		// nepodařilo se zabránit kolizi, zůstaneme tam, kde jsme
-		 		$(this).coords({x: oc.x, y: oc.y});
-		 		prevented = false;
-		 	}
 			
 		});
 		
