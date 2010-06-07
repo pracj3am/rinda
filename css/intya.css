@@ -20,10 +20,10 @@ div#x {
 
 .o h2 {
 	display: none;
-	font-size: 15px;
+	font-size: 25px;
 	color: white;
 	position: absolute;
-	top: 50%;
+	top: 30%;
 	left: 50%;
 	width: 90%;
 	height: 40px;
@@ -32,16 +32,15 @@ div#x {
 .o p {
 	display: none;
 	font-size: 14px;
-}
-.o.growed-2.2 h2 {
-	top: 32%;
-	font-size: 25px;
-}
-.o.growed-2.2 p {
-	display: block;
 	position: absolute;
 	text-align: center;
 	top: 52%;
 	left:  15%;
 	width: 70%;
+}
+.o.big h2 {
+	display: block;
+}
+.o.big p {
+	display: block;
 }

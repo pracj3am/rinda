@@ -26,9 +26,15 @@ $(function(){
 			});
 		},
 		step: opt.step,
-		complete: this.step
+		complete: function(circle){
+			this.step(circle);
+			$(circle).addClass('big');
+		}
 	}, {
 		speed: opt.speed,
+		start: function(circle){
+			$(circle).removeClass('big');
+		},
 		step: opt.step,
 		complete: function(circle) {
 			this.step(circle);
