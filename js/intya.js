@@ -80,22 +80,15 @@
 		}
 		this.wrap('<div/>');
 		
-		containment = $('<div/>').css({
-			position: 'absolute', 
-			width: cw, 
-			height: ch, 
-			top: 0, left: 0,
-			zIndex: 1
-		}).appendTo(canvas);
-		
 
 		this.each(function(){
-			var p = $(this).parent()[0];
+			var p = $(this).parent()[0],
+				r = $(this).width()/2;
 			$(p).css({
 				position: 'absolute',
 				width:0, height:0,
-				top: Math.round(containment.position().top+Math.random()*containment.height()),
-				left: Math.round(containment.position().left+Math.random()*containment.width()),
+				top: Math.round(r+Math.random()*(ch-r)),
+				left: Math.round(r+Math.random()*(cw-r)),
 				zIndex: 99
 			});
 			
@@ -103,35 +96,38 @@
 				my: 'center center',
 				of: p
 			});
+			
 			$(this).data({
-				r: $(this).width()/2, v: {x: 0, y: 0}
+				r: r, v: {x: 0, y: 0},
+				containmentH: $('<div/>').css({
+					position: 'absolute', 
+					width: cw-2*r*hoverOpt.mag, 
+					height: ch-2*r*hoverOpt.mag, 
+					top: r*hoverOpt.mag, left: r*hoverOpt.mag,
+					zIndex: 1
+				}).appendTo(canvas),
+				containmentC: $('<div/>').css({
+					position: 'absolute', 
+					width: cw-2*r*clickOpt.mag, 
+					height: ch-2*r*clickOpt.mag, 
+					top: r*clickOpt.mag, left: r*clickOpt.mag,
+					zIndex: 1
+				}).appendTo(canvas)
 			});
+			
 		}).hover(function(){
 			//$(this).bringOnTop();
 			if (!$(this).is('.clicked')) {
 				$(this).grow(hoverOpt);
-				var r = $(this).data('r')*hoverOpt.mag;
+				$(this).parent().draggable('option', 'containment', $(this).data('containmentH'));
 			} else {
-				var r = $(this).data('r')*clickOpt.mag;
+				$(this).parent().draggable('option', 'containment', $(this).data('containmentC'));
 			}
-
-			containment.css({
-				width: cw-2*r, 
-				height: ch-2*r, 
-				top: r, left: r,
-			});
 		},function(){
 			if (!$(this).is('.clicked')) {
 				$(this).ungrow();
 			}
 		}).parent().unbind().click(function(){
-			var r = $(this).children().data('r')*clickOpt.mag;
-			containment.css({
-				width: cw-2*r, 
-				height: ch-2*r, 
-				top: r, left: r,
-			});
-
 
 			var po = $(this).children();
 			if (!po.is('.clicked')) {
