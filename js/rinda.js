@@ -11,7 +11,7 @@
 	
 	var 
 		fps, hoverOpt, clickOpt,
-		pow = Math.pow, sqrt = Math.sqrt, abs = Math.abs, //aliases
+		sqrt = Math.sqrt, abs = Math.abs, //aliases
 		canvas, cw,	ch,	o, containment,
 		siId; //setInterval ID
 	
@@ -42,7 +42,7 @@
 	}
 	
 	var Coeff = function(v) {
-		var v2 = pow(v.x,2)+pow(v.y,2)
+		var v2 = v.x*v.x+v.y*v.y
 		
 		return Math.exp(-sqrt(v2)/fps/10); 
 	}
@@ -283,7 +283,7 @@
 					} else {
 						var 
 							b  = (coords.x*ocoords.y-coords.y*ocoords.x)/(coords.x-ocoords.x),
-							cos  = 1/sqrt(pow(a,2)+1),
+							cos  = 1/sqrt(a*a+1),
 							a1 = -1/a,
 							cos1 = abs(a)*cos,
 							// průsečík přímky a nové polohy kružnice
@@ -349,7 +349,7 @@
 		G.oc = oc;
 		G.f = sc.r + oc.r; //vzdálenost středů
 		// if overlap
-		if (sqrt(pow(sx-ox,2)+pow(sy-oy,2)) < G.f) {
+		if (sqrt((sx-ox)*(sx-ox)+(sy-oy)*(sy-oy)) < G.f) {
 			G.overlap = true;
 			if (abs(sy-oy) < 0.001 && abs(sx-ox) < 0.001) {
 				G.ident = true;			
@@ -361,7 +361,7 @@
 					G.sin = 1;
 					G.z = {x: ox, y: oy>sy ? sy+G.f : sy-G.f}; // bod pro this tak, aby se kružnice dotýkaly
 				} else {
-					G.cos = 1/sqrt(pow(G.tg,2)+1);
+					G.cos = 1/sqrt(G.tg*G.tg+1);
 					G.sin = G.tg*G.cos;
 					var x1 = sx<ox ? sx+G.f*G.cos : sx-G.f*G.cos;
 					G.z = {x: x1, y: G.tg*x1 + (sx*oy-sy*ox)/(sx-ox)}; // bod pro this tak, aby se kružnice dotýkaly
