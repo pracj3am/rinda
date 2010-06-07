@@ -98,7 +98,12 @@
 			});
 			
 			$(this).data({
-				r: r, v: {x: 0, y: 0},
+				x: $(p).position().left,
+				y: $(p).position().top,
+				r: r, size: r,
+				v: {x: 0, y: 0},
+				dragged: false,
+				clicked: false,
 				containmentH: $('<div/>').css({
 					position: 'absolute', 
 					width: cw-2*r*hoverOpt.mag, 
@@ -116,26 +121,25 @@
 			});
 			
 		}).hover(function(){
-			//$(this).bringOnTop();
-			if (!$(this).is('.clicked')) {
+			if (!$(this).data('clicked')) {
 				$(this).grow(hoverOpt);
 				$(this).parent().draggable('option', 'containment', $(this).data('containmentH'));
 			} else {
 				$(this).parent().draggable('option', 'containment', $(this).data('containmentC'));
 			}
 		},function(){
-			if (!$(this).is('.clicked')) {
-				$(this).ungrow();
+			if (!$(this).data('clicked')) {
+				$(this).ungrow(hoverOpt);
 			}
 		}).parent().unbind().click(function(){
 
 			var po = $(this).children();
-			if (!po.is('.clicked')) {
-				po.grow(clickOpt).addClass('clicked');
+			if (!po.data('clicked')) {
+				po.grow(clickOpt).data('clicked', true);
 			}
 			o.each(function(){
-				if ($(this).is('.clicked') && this!=po[0]) {
-					$(this).ungrow().removeClass('clicked');
+				if ($(this).data('clicked') && this!=po[0]) {
+					$(this).ungrow(clickOpt).data('clicked', false);
 				}
 			});
 
@@ -144,16 +148,24 @@
 			containment: containment,
 			scroll: false,
 			start: function(e) {
+				$(this).children().bringOnTop();
+				$(this).children().data('dragged', true);
 			},
 			drag: function(e) {
-				$(this).children().preventCollision(o);
+				var pos = $(this).position();
 				Mouse.move(e);
+				$(this).children().data('x', pos.left);
+				$(this).children().data('y', pos.top);
 				$(this).children().data('v', {x: 0, y: 0});
+				$(this).children().preventCollision(o);
 			},
 			stop: function(e) {
+				var pos = $(this).position();
 				Mouse.move(e);
+				$(this).children().data('x', pos.left);
+				$(this).children().data('y', pos.top);
 				$(this).children().data('v', {x: Mouse.vx, y: Mouse.vy});
-				//alert('stop'+Mouse.vx);
+				$(this).children().data('dragged', false);
 			}
 		}).mousedown(function(e){
 			Mouse.reset(e);
@@ -170,13 +182,14 @@
 		opts.start();
 		
 		this.stop().animate({
-			width: opts.mag*$(this).data('r')*2,
-			height: opts.mag*$(this).data('r')*2,
-			top: -opts.mag/2*$(this).data('r')*2,
-			left: -opts.mag/2*$(this).data('r')*2
+			width: opts.mag*$(this).data('size')*2,
+			height: opts.mag*$(this).data('size')*2,
+			top: -opts.mag/2*$(this).data('size')*2,
+			left: -opts.mag/2*$(this).data('size')*2
 		},{
 			duration: opts.speed,
 			step: function(){
+				$(this).data('r', $(this).width()/2);
 				var xy = $(this).coords();
 				$(this).coords({ // to be inside canvas
 					x: Math.max(Math.min(cw-xy.r, xy.x),xy.r),
@@ -193,13 +206,18 @@
 		return this;
 	}
 
-	$.fn.ungrow = function() {
+	$.fn.ungrow = function(opts) {
 		this.stop().animate({
-			width: $(this).data('r')*2,
-			height: $(this).data('r')*2,
-			top: -$(this).data('r'),
-			left: -$(this).data('r')
-		}, 400);
+			width: $(this).data('size')*2,
+			height: $(this).data('size')*2,
+			top: -$(this).data('size'),
+			left: -$(this).data('size')
+		}, {
+			duration: opts.speed,
+			complete: function() {
+				$(this).data('r', $(this).width()/2);
+			}
+		});
 		return this;
 	}
 	
@@ -211,7 +229,7 @@
 	
 	$.fn.coords = function(coords, pushed) {
 		var pos = this.parent().position();
-		var ocoords = {x: pos.left, y: pos.top, r: this.width()/2};
+		var ocoords = {x: this.data('x'), y: this.data('y'), r: this.data('r')};
 		
 		//objekt je chtěn na nové pozici
 		if (typeof coords == 'object') {
@@ -297,6 +315,8 @@
 			}			
 			
 			this.parent().css({left: ncoords.x, top: ncoords.y});
+			this.data('x', ncoords.x);
+			this.data('y', ncoords.y);
 			
 			return moved;
 		}
@@ -368,6 +388,10 @@
 	}
 	
 	$.fn.tryMove = function(coords) {
+		if (this.data('dragged')) {
+			return;
+		}
+		
 		var s = this,
 			sCoords = $(this).coords(),
 			oo = o.not(this),
@@ -385,9 +409,9 @@
 						m;
 					
 					// "relativní hmotnost"
-					if ($(s).is('.clicked')) {
+					if ($(s).data('clicked')) {
 						m = 0;
-					} else if ($(o).is('.clicked')) {
+					} else if ($(o).data('clicked')) {
 						m = 1;
 					} else {
 						m = .5;
