@@ -179,7 +179,7 @@
 	}
 	
 	$.fn.grow = function(opts) {
-		opts.start();
+		opts.start(this[0]);
 		
 		this.stop().animate({
 			width: opts.mag*$(this).data('size')*2,
@@ -196,10 +196,11 @@
 					y: Math.max(Math.min(ch-xy.r, xy.y),xy.r)
 				});
 				$(this).preventCollision(o);
-				opts.step();
+				opts.step(this);
 			},
 			complete: function() {
-				opts.complete();
+				$(this).data('r', $(this).width()/2);
+				opts.complete(this);
 			}
 		});
 		
@@ -214,8 +215,13 @@
 			left: -$(this).data('size')
 		}, {
 			duration: opts.speed,
+			step: function() {
+				$(this).data('r', $(this).width()/2);
+				opts.step(this);
+			},
 			complete: function() {
 				$(this).data('r', $(this).width()/2);
+				opts.complete(this);
 			}
 		});
 		return this;
