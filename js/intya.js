@@ -7,6 +7,11 @@ $(function(){
 	$('#x .o').circle({
 		mag: 1.3056,
 		speed: 400,
+		start: function(circle) {
+			$(circle).children('img').attr('src', function(i, src){
+				return src.replace(/(\d)x\./,'$1.');
+			});
+		},
 		step: function(circle){
 			var r = $(circle).data('r');
 			$(circle).children('img').width(2*r).height(2*r);
@@ -14,7 +19,17 @@ $(function(){
 		complete: this.step
 	}, {
 		mag: 2.2,
-		speed: 400
+		speed: 400,
+		start: function(circle) {
+			$(circle).children('img').attr('src', function(i, src){
+				return src.replace(/(\d)\./,'$1x.');
+			});
+		},
+		step: function(circle){
+			var r = $(circle).data('r');
+			$(circle).children('img').width(2*r).height(2*r);
+		},
+		complete: this.step
 	});
 	$.start({
 		fps: 10,
