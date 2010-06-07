@@ -1,4 +1,13 @@
-(function($){
+/*!
+ * rinda!
+ * http://rinda.intya.cz/
+ *
+ * Copyright 2010, Jan Prachař
+ * Copyright 2010, Intya, s.r.o.
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ *
+ */
+ (function($){
 	
 	var 
 		fps, hoverOpt, clickOpt,
