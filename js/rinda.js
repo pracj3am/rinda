@@ -7,10 +7,10 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  *
  */
- (function($){
+(function($){
 	
 	var 
-		fps, hoverOpt, clickOpt,
+		fps, hoverOpt, unHoverOpt, clickOpt, unClickOpt,
 		sqrt = Math.sqrt, abs = Math.abs, //aliases
 		canvas, cw,	ch,	o,
 		siId; //setInterval ID
@@ -78,9 +78,11 @@
 		ch = canvas.innerHeight();
 	}
 	
-	$.fn.circle = function(hoverOptions, clickOptions) {
+	$.fn.circle = function(hoverOptions, unHoverOptions, clickOptions, unClickOptions) {
 		hoverOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, hoverOptions);
+		unHoverOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unHoverOptions);
 		clickOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, clickOptions);
+		unClickOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unClickOptions);
 		
 		if (typeof o == 'undefined') {
 			o = this;
@@ -138,7 +140,7 @@
 			}
 		},function(){
 			if (!$(this).data('clicked')) {
-				$(this).ungrow(hoverOpt);
+				$(this).ungrow(unHoverOpt);
 			}
 		}).parent().unbind().click(function(){
 
@@ -148,7 +150,7 @@
 			}
 			o.each(function(){
 				if ($(this).data('clicked') && this!=po[0]) {
-					$(this).ungrow(clickOpt).data('clicked', false);
+					$(this).ungrow(unClickOpt).data('clicked', false);
 				}
 			});
 
@@ -216,6 +218,8 @@
 	}
 
 	$.fn.ungrow = function(opts) {
+		opts.start(this[0]);
+
 		this.stop().animate({
 			width: $(this).data('size')*2,
 			height: $(this).data('size')*2,

@@ -14,6 +14,10 @@ div#x {
 	text-align:center;
 }
 
+.o img {
+	overflow: visible;
+}
+
 .o h2 {
 	display: none;
 	font-size: 15px;
