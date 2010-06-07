@@ -12,7 +12,7 @@
 	var 
 		fps, hoverOpt, clickOpt,
 		sqrt = Math.sqrt, abs = Math.abs, //aliases
-		canvas, cw,	ch,	o, containment,
+		canvas, cw,	ch,	o,
 		siId; //setInterval ID
 	
 	var Mouse = {
@@ -154,7 +154,6 @@
 
 		}).draggable({
 			addClasses: false,
-			containment: containment,
 			scroll: false,
 			start: function(e) {
 				$(this).children().bringOnTop();
