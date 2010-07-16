@@ -9,8 +9,8 @@ $(function(){
 		mag: 1.3056,
 		speed: 400,
 		step: function(circle) {
-			var r = $(circle).data('r');
-			$(circle).children('img').width(2*r).height(2*r);
+			var r = $(circle).width();
+			$(circle).children('img').width(r).height(r);
 		},
 		complete: this.step
 	}, {

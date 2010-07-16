@@ -85,18 +85,22 @@
 		clickOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, clickOptions);
 		unClickOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unClickOptions);
 
-		if (typeof o == 'undefined') {
-			o = this;
-		} else {
-			o.add(this);
-		}
 		this.wrap('<div/>');
 
 
-		this.each(function(){
-			var p = $(this).parent()[0],
-				r = $(this).width()/2;
-			$(p).css({
+		this.parent().each(function(){
+			var oo = $(this),
+                c = $(this).children(),
+				r = c.width()/2;
+
+
+            if (typeof o == 'undefined') {
+                o = $(this);
+            } else {
+                o = o.add(this);
+            }
+
+            oo.css({
 				position: 'absolute',
 				width:0, height:0,
 				top: Math.round(r+Math.random()*(ch-r)),
@@ -104,19 +108,19 @@
 				zIndex: 99
 			});
 
-			$(this).position({
+			c.position({
 				my: 'center center',
-				of: p
+				of: this
 			});
 
-			$(this).data({
-				x: $(p).position().left,
-				y: $(p).position().top,
+			oo.data({
+				x: oo.position().left,
+				y: oo.position().top,
 				r: r, size: r,
 				v: {x: 0, y: 0},
+                c: c,
 				dragged: false,
 				clicked: false,
-                parent: $(p),
 				containmentH: $('<div/>').css({
 					position: 'absolute',
 					width: cw-2*r*hoverOpt.mag,
@@ -133,26 +137,26 @@
 				}).appendTo(canvas)
 			});
 
-		}).hover(function(){
+		}).unbind().hover(function(){
 			if (!$(this).data('clicked')) {
 				$(this).grow(hoverOpt);
-				$(this).data('parent').draggable('option', 'containment', $(this).data('containmentH'));
+				$(this).draggable('option', 'containment', $(this).data('containmentH'));
 			} else {
-				$(this).data('parent').draggable('option', 'containment', $(this).data('containmentC'));
+				$(this).draggable('option', 'containment', $(this).data('containmentC'));
 			}
 		},function(){
 			if (!$(this).data('clicked')) {
 				$(this).ungrow(unHoverOpt);
 			}
-		}).parent().unbind().click(function(){
+		}).click(function(){
 
-			var po = $(this).children();
-			if (!po.data('clicked')) {
-				po.grow(clickOpt).data('clicked', true);
+			if (!$(this).data('clicked')) {
+				$(this).data('clicked', true).grow(clickOpt);
 			}
+            oo = this;
 			o.each(function(){
-				if ($(this).data('clicked') && this!=po[0]) {
-					$(this).ungrow(unClickOpt).data('clicked', false);
+				if ($(this).data('clicked') && this!=oo) {
+					$(this).data('clicked', false).ungrow(unClickOpt);
 				}
 			});
 
@@ -160,28 +164,28 @@
 			addClasses: false,
 			scroll: false,
 			start: function(e) {
-				$(this).children().bringOnTop();
-				$(this).children().data('dragged', true);
+				$(this).bringOnTop();
+				$(this).data('dragged', true);
 			},
 			drag: function(e) {
 				var pos = $(this).position();
 				Mouse.move(e);
-				$(this).children().data('x', pos.left);
-				$(this).children().data('y', pos.top);
-				$(this).children().data('v', {x: 0, y: 0});
-				$(this).children().preventCollision(o);
+				$(this).data('x', pos.left);
+				$(this).data('y', pos.top);
+				$(this).data('v', {x: 0, y: 0});
+				$(this).preventCollision(o);
 			},
 			stop: function(e) {
 				var pos = $(this).position();
 				Mouse.move(e);
-				$(this).children().data('x', pos.left);
-				$(this).children().data('y', pos.top);
-				$(this).children().data('v', {x: Mouse.vx, y: Mouse.vy});
-				$(this).children().data('dragged', false);
+				$(this).data('x', pos.left);
+				$(this).data('y', pos.top);
+				$(this).data('v', {x: Mouse.vx, y: Mouse.vy});
+				$(this).data('dragged', false);
 			}
 		}).mousedown(function(e){
 			Mouse.reset(e);
-			$(this).children().data('v', {x: 0, y: 0});
+			$(this).data('v', {x: 0, y: 0});
 		}).mouseup(function(e){
 			//Mouse.move(e);
 			//alert('up'+Mouse.vx);
@@ -191,28 +195,31 @@
 	}
 
 	$.fn.grow = function(opts) {
-		opts.start(this[0]);
+		var c = this.data('c'),
+            oo = this;
+        opts.start(c);
+        this.bringOnTop();
 
-		this.stop().animate({
-			width: opts.mag*$(this).data('size')*2,
-			height: opts.mag*$(this).data('size')*2,
-			top: -opts.mag/2*$(this).data('size')*2,
-			left: -opts.mag/2*$(this).data('size')*2
+		c.stop().animate({
+			width: opts.mag*oo.data('size')*2,
+			height: opts.mag*oo.data('size')*2,
+			top: -opts.mag/2*oo.data('size')*2,
+			left: -opts.mag/2*oo.data('size')*2
 		},{
 			duration: opts.speed,
 			step: function(){
-				$(this).data('r', $(this).width()/2);
-				var xy = $(this).coords();
-				$(this).coords({ // to be inside canvas
+				oo.data('r', c.width()/2);
+				var xy = oo.coords();
+				oo.coords({ // to be inside canvas
 					x: Math.max(Math.min(cw-xy.r, xy.x),xy.r),
 					y: Math.max(Math.min(ch-xy.r, xy.y),xy.r)
 				});
-				$(this).preventCollision(o);
-				opts.step(this);
+				oo.preventCollision(o);
+				opts.step(c);
 			},
 			complete: function() {
-				$(this).data('r', $(this).width()/2);
-				opts.complete(this);
+				oo.data('r', c.width()/2);
+				opts.complete(c);
 			}
 		});
 
@@ -220,22 +227,24 @@
 	}
 
 	$.fn.ungrow = function(opts) {
-		opts.start(this[0]);
+		var c = this.data('c'),
+            oo = this;
+		opts.start(c);
 
-		this.stop().animate({
-			width: $(this).data('size')*2,
-			height: $(this).data('size')*2,
-			top: -$(this).data('size'),
-			left: -$(this).data('size')
+		c.stop().animate({
+			width: oo.data('size')*2,
+			height: oo.data('size')*2,
+			top: -oo.data('size'),
+			left: -oo.data('size')
 		}, {
 			duration: opts.speed,
 			step: function() {
-				$(this).data('r', $(this).width()/2);
-				opts.step(this);
+				oo.data('r', c.width()/2);
+				opts.step(c);
 			},
 			complete: function() {
-				$(this).data('r', $(this).width()/2);
-				opts.complete(this);
+				oo.data('r', c.width()/2);
+				opts.complete(c);
 			}
 		});
 		return this;
@@ -243,9 +252,9 @@
 
 	$.fn.bringOnTop = function() {
 		o.each(function(){
-            $(this).data('parent').css({zIndex: 99});
+            $(this).css({zIndex: 99});
         });
-		this.data('parent').css({zIndex: 100});
+		this.css({zIndex: 100});
 		return this;
 	}
 
@@ -335,7 +344,7 @@
 				ncoords = {x: x0, y: y0, r: coords.r};
 			}
 
-			this.data('parent').css({left: ncoords.x, top: ncoords.y});
+			this.css({left: ncoords.x, top: ncoords.y});
 			this.data('x', ncoords.x);
 			this.data('y', ncoords.y);
 
@@ -419,7 +428,7 @@
 
 		$(this).coords(coords);
 
-        if (false) {
+        if (false /*rinda.globalTime % 2 == 0*/) {
 
             oo.each(function(){
                 var collided =
@@ -492,14 +501,13 @@
         rinda.globalTime++;
 
         var oo = o;
-
         o.each(function(){
-			var c = $(this).coords(),
+			var co = $(this).coords(),
                 v = $(this).data('v');
-            oo = oo.not(this);
+            //oo = oo.not(this);
 			$(this).tryMove({
-				x: c.x + v.x/rinda.fps,
-				y: c.y + v.y/rinda.fps
+				x: co.x + v.x/rinda.fps*(1+c),
+				y: co.y + v.y/rinda.fps*(1+c)
 			},oo);
 		});
 	};
