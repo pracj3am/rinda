@@ -8,89 +8,90 @@
  *
  */
 (function($){
-	
-	var 
-		fps, hoverOpt, unHoverOpt, clickOpt, unClickOpt,
+
+	var
+		hoverOpt, unHoverOpt, clickOpt, unClickOpt,
 		sqrt = Math.sqrt, abs = Math.abs, //aliases
 		canvas, cw,	ch,	o,
-		siId; //setInterval ID
-	
+		rinda = {},
+        C = [90, 45, 30, 20, 15];
+
 	var Mouse = {
 		reset: function(e) {
-			var d  = new Date();
 			this.x = e.pageX;
 			this.y = e.pageY;
-			this.t = d.getTime();
+			this.t = (new Date).getTime();
 			this.vx = 0;
 			this.vy = 0;
 		},
 		move: function(e) {
-			var d  = new Date();
-			if (d.getTime() - this.t > 1000/fps) {
+			var t = (new Date).getTime()
+            if (t - this.t > rinda.tickInterval) {
 				var ox = this.x,
 					oy = this.y,
 					ot = this.t;
-	
+
 				this.x = e.pageX;
 				this.y = e.pageY;
-				this.t = d.getTime();
-				
-				this.vx = 1000/fps*(this.x-ox)/(this.t-ot);
-				this.vy = 1000/fps*(this.y-oy)/(this.t-ot);
+				this.t = t;
+
+				this.vx = 1000*(this.x-ox)/(this.t-ot);
+				this.vy = 1000*(this.y-oy)/(this.t-ot);
 			}
 		}
 	}
-	
+
 	var Coeff = function(v) {
 		var v2 = v.x*v.x+v.y*v.y
-		
-		return Math.exp(-sqrt(v2)/fps/10); 
+
+		return Math.exp(-sqrt(v2)/1000);
 	}
 
-	
+	rinda.canDecreaseFps = true;
+    rinda.fpsChoice = 0;
+
 	$.extend({
 		start: function(options) {
 			//vmax in pxs/s
-			var settings = $.extend({fps: 20, vmax: 100}, options),
-				vmax = settings.vmax/settings.fps;
-			fps = settings.fps;
-			
+			var settings = $.extend({vmax: 100}, options),
+				vmax = settings.vmax;
+
 			o.each(function(){
 				$(this).data('v', {
-					x: vmax*Math.random()-vmax/2, y: vmax*Math.random()-vmax/2 
+					x: vmax*Math.random()-vmax/2, y: vmax*Math.random()-vmax/2
 				});
 			});
-	
-			siId = window.setInterval(function(){o.frameChange()}, 1000/fps);
 
+            rinda.globalTime = 0;
+            rinda.initializeTickTimer();
 		},
 		stop: function() {
-			window.clearInterval(siId);
+			window.clearInterval(rinda.tickTimer);
 		},
 		pause: function() {
-			window.clearInterval(siId);
+			window.clearInterval(rinda.tickTimer);
 		}
 	});
-	
+
 	$.fn.canvas = function(options) {
 		canvas = this;
 		cw = canvas.innerWidth();
 		ch = canvas.innerHeight();
 	}
-	
+
 	$.fn.circle = function(hoverOptions, unHoverOptions, clickOptions, unClickOptions) {
 		hoverOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, hoverOptions);
 		unHoverOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unHoverOptions);
 		clickOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, clickOptions);
 		unClickOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unClickOptions);
-		
+
 		if (typeof o == 'undefined') {
 			o = this;
 		} else {
 			o.add(this);
 		}
 		this.wrap('<div/>');
-		
+
 
 		this.each(function(){
 			var p = $(this).parent()[0],
@@ -102,12 +103,12 @@
 				left: Math.round(r+Math.random()*(cw-r)),
 				zIndex: 99
 			});
-			
+
 			$(this).position({
 				my: 'center center',
 				of: p
 			});
-			
+
 			$(this).data({
 				x: $(p).position().left,
 				y: $(p).position().top,
@@ -117,21 +118,21 @@
 				clicked: false,
                 parent: $(p),
 				containmentH: $('<div/>').css({
-					position: 'absolute', 
-					width: cw-2*r*hoverOpt.mag, 
-					height: ch-2*r*hoverOpt.mag, 
+					position: 'absolute',
+					width: cw-2*r*hoverOpt.mag,
+					height: ch-2*r*hoverOpt.mag,
 					top: r*hoverOpt.mag, left: r*hoverOpt.mag,
 					zIndex: 1
 				}).appendTo(canvas),
 				containmentC: $('<div/>').css({
-					position: 'absolute', 
-					width: cw-2*r*clickOpt.mag, 
-					height: ch-2*r*clickOpt.mag, 
+					position: 'absolute',
+					width: cw-2*r*clickOpt.mag,
+					height: ch-2*r*clickOpt.mag,
 					top: r*clickOpt.mag, left: r*clickOpt.mag,
 					zIndex: 1
 				}).appendTo(canvas)
 			});
-			
+
 		}).hover(function(){
 			if (!$(this).data('clicked')) {
 				$(this).grow(hoverOpt);
@@ -186,12 +187,12 @@
 			//alert('up'+Mouse.vx);
 			//$(this).children().data('v', {x: Mouse.vx, y: Mouse.vy});
 		});
-		
+
 	}
-	
+
 	$.fn.grow = function(opts) {
 		opts.start(this[0]);
-		
+
 		this.stop().animate({
 			width: opts.mag*$(this).data('size')*2,
 			height: opts.mag*$(this).data('size')*2,
@@ -214,7 +215,7 @@
 				opts.complete(this);
 			}
 		});
-		
+
 		return this;
 	}
 
@@ -239,7 +240,7 @@
 		});
 		return this;
 	}
-	
+
 	$.fn.bringOnTop = function() {
 		o.each(function(){
             $(this).data('parent').css({zIndex: 99});
@@ -247,15 +248,15 @@
 		this.data('parent').css({zIndex: 100});
 		return this;
 	}
-	
+
 	$.fn.coords = function(coords, pushed) {
 		var ocoords = {x: this.data('x'), y: this.data('y'), r: this.data('r')};
-		
+
 		//objekt je chtěn na nové pozici
 		if (typeof coords == 'object') {
 			if (typeof coords.r == 'undefined')
 				coords.r = ocoords.r;
-				
+
 			var ncoords = {}, //nová poloha
 				moved = true,
 				r  = coords.r;
@@ -286,7 +287,7 @@
 					if (abs(a)>1000) {
 						var x0 = coords.x, y0 = coords.y;
 					} else {
-						var 
+						var
 							b  = (coords.x*ocoords.y-coords.y*ocoords.x)/(coords.x-ocoords.x),
 							cos  = 1/sqrt(a*a+1),
 							a1 = -1/a,
@@ -306,14 +307,14 @@
 						} else if (/*0 < yl && yl < ch && */coords.x-r<0) {
 							//levá strana
 							if (abs(a) < 0.001) {
-								var x0 = coords.x, y0 = coords.y;	
+								var x0 = coords.x, y0 = coords.y;
 							} else {
 								var x0 = r, y0 = abs(a1)/a1*r/cos1+a1*r+b1;
 							}
 						} else if (coords.x+r>cw){
 							//pravá strana
 							if (abs(a) < 0.001) {
-								var x0 = coords.x, y0 = coords.y;	
+								var x0 = coords.x, y0 = coords.y;
 							} else {
 								var x0 = cw-r, y0 = -abs(a1)/a1*r/cos1+a1*(cw-r)+b1;
 							}
@@ -321,8 +322,8 @@
 					}
 				} else {
 					var x0 = coords.x, y0 = coords.y;
-				} 
-				
+				}
+
 				if (x0<r || x0>cw-r || y0<r || y0>ch-r) {
 					moved = false;
 					x0 = Math.max(Math.min(cw-r, x0),r);
@@ -332,18 +333,18 @@
 				}
 
 				ncoords = {x: x0, y: y0, r: coords.r};
-			}			
-			
+			}
+
 			this.data('parent').css({left: ncoords.x, top: ncoords.y});
 			this.data('x', ncoords.x);
 			this.data('y', ncoords.y);
-			
+
 			return moved;
 		}
-		
+
 		return ocoords;
 	}
-	
+
 	$.fn.handleCollision = function(s, cb) {
 		var sc = $(s).coords(), sx = sc.x, sy = sc.y,
 			oc = this.coords(), ox = oc.x, oy = oc.y,
@@ -357,7 +358,7 @@
 		if (sqrt((sx-ox)*(sx-ox)+(sy-oy)*(sy-oy)) < G.f) {
 			G.overlap = true;
 			if (abs(sy-oy) < 0.001 && abs(sx-ox) < 0.001) {
-				G.ident = true;			
+				G.ident = true;
 			} else {
 				G.ident = false;
 				G.tg = (sy-oy)/(sx-ox);
@@ -370,7 +371,7 @@
 					G.sin = G.tg*G.cos;
 					var x1 = sx<ox ? sx+G.f*G.cos : sx-G.f*G.cos;
 					G.z = {x: x1, y: G.tg*x1 + (sx*oy-sy*ox)/(sx-ox)}; // bod pro this tak, aby se kružnice dotýkaly
-					
+
 				}
 			}
 		} else {
@@ -391,7 +392,7 @@
 						var alpha = Math.random()*2*Math.PI;
 						moved = $(o).coords({x: G.sc.x + G.f*Math.sin(alpha), y: G.sc.y + G.f*Math.cos(alpha)}, true);
 					} else {
-						moved = $(o).coords(G.z, true); 
+						moved = $(o).coords(G.z, true);
 					}
 				 	prevented = prevented && moved;
 				 	if (!$(o).preventCollision(oo)) {
@@ -403,20 +404,20 @@
 			});
 
 		});
-		
+
 		return prevented;
 	}
-	
+
 	$.fn.tryMove = function(coords) {
 		if (this.data('dragged')) {
 			return;
 		}
-		
+
 		var s = this,
 			sCoords = $(this).coords(),
 			oo = o.not(this),
 			move = true;
-			
+
 		$(this).coords(coords);
 		oo.each(function(){
 			var collided =
@@ -427,7 +428,7 @@
 						oco = Coeff(ov),
 						dv = ov.x*G.cos+ov.y*G.sin-sv.x*G.cos-sv.y*G.sin,
 						m;
-					
+
 					// "relativní hmotnost"
 					if ($(s).data('clicked')) {
 						m = 0;
@@ -436,7 +437,7 @@
 					} else {
 						m = .5;
 					}
-					
+
 			 		//změna rychlosti
 					$(s).data('v', {
 						x: (sv.x+2*m*dv*G.cos)*sco,
@@ -451,23 +452,60 @@
 				return false;
 			});
 			move = move && !collided;
-			
+
 		});
-		
+
 		if (!move) {
 			$(this).coords(sCoords);
 		}
-		return this;
 	}
 
-	$.fn.frameChange = function() {
-		this.each(function(){
-			var c = $(this).coords();
+    rinda.initializeTickTimer = function() {
+        window.clearInterval(rinda.tickTimer);
+        rinda.fps = C[rinda.fpsChoice];
+        rinda.tickInterval = 1000/rinda.fps;
+        rinda.lastTime = (new Date).getTime();
+        rinda.lastTimeDelta = 0;
+        rinda.lastTimeSlownessCount = 0;
+
+		rinda.tickTimer = window.setInterval(rinda.tick, rinda.tickInterval);
+    };
+
+	rinda.tick = function() {
+
+        var b = (new Date).getTime();
+        rinda.lastTimeDelta += b - rinda.lastTime - rinda.tickInterval;
+        if (rinda.lastTimeDelta > 100) rinda.lastTimeDelta = 100;
+        if (rinda.canDecreaseFps && rinda.lastTimeDelta > 50) {
+            rinda.lastTimeSlownessCount++;
+            rinda.lastTimeSlownessCount == 20 && rinda.decreaseFps()
+        }
+        var c = 0;
+        if (rinda.lastTimeDelta > rinda.tickInterval) {
+            c = Math.floor(rinda.lastTimeDelta / rinda.tickInterval);
+            rinda.lastTimeDelta -= rinda.tickInterval * c
+        }
+        rinda.lastTime = b;
+        rinda.globalTime++;
+
+
+        o.each(function(){
+			var c = $(this).coords(),
+                v = $(this).data('v');
 			$(this).tryMove({
-				x: c.x + $(this).data('v').x,
-				y: c.y + $(this).data('v').y
+				x: c.x + v.x/rinda.fps,
+				y: c.y + v.y/rinda.fps
 			});
 		});
-	}
+	};
+
+    rinda.decreaseFps = function () {
+        if (rinda.fpsChoice < C.length - 1) {
+            rinda.fpsChoice++;
+            rinda.initializeTickTimer();
+            if (rinda.fpsChoice == C.length - 1) rinda.canDecreaseFps = false
+        }
+    };
+
 
 })(jQuery);

@@ -45,7 +45,6 @@ $(function(){
 	});
 
 	$.start({
-		fps: 10,
-		vmax: 100
+		vmax: 300
 	})
 });
