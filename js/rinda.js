@@ -35,8 +35,8 @@
 				this.y = e.pageY;
 				this.t = t;
 
-				this.vx = 1000*(this.x-ox)/(this.t-ot);
-				this.vy = 1000*(this.y-oy)/(this.t-ot);
+				this.vx = 1012*(this.x-ox)/(this.t-ot);
+				this.vy = 1012*(this.y-oy)/(this.t-ot);
 			}
 		}
 	}
@@ -298,13 +298,13 @@
 							b1 = y1-a1*x1;
 							// průsečíky přímky a*x+b s okrajem canvasu
 							// xt = -b/a, xb = (ch-b)/a, yl = b, yr = a*cw+b;
-						if (/*0 < xt && xt < cw && */coords.y-r<0) {
+						if (coords.y-r<0) {
 							//horní strana
 							var y0 = r, x0 = 1/a1*(r/cos1-b1+r);
-						} else if (/*0 < xb && xb < cw && */coords.y+r>ch) {
+						} else if (coords.y+r>ch) {
 							//dolní strana
 							var y0 = ch-r, x0 = 1/a1*(-r/cos1-b1+ch-r);
-						} else if (/*0 < yl && yl < ch && */coords.x-r<0) {
+						} else if (coords.x-r<0) {
 							//levá strana
 							if (abs(a) < 0.001) {
 								var x0 = coords.x, y0 = coords.y;
@@ -408,56 +408,58 @@
 		return prevented;
 	}
 
-	$.fn.tryMove = function(coords) {
+	$.fn.tryMove = function(coords, oo) {
 		if (this.data('dragged')) {
 			return;
 		}
 
 		var s = this,
 			sCoords = $(this).coords(),
-			oo = o.not(this),
 			move = true;
 
 		$(this).coords(coords);
-		oo.each(function(){
-			var collided =
-			$(this).handleCollision(s, function(o, G){
-				if (G.overlap && !G.ident) {
-					var sv = $(s).data('v'), ov = $(o).data('v'),
-						sco = Coeff(sv),
-						oco = Coeff(ov),
-						dv = ov.x*G.cos+ov.y*G.sin-sv.x*G.cos-sv.y*G.sin,
-						m;
 
-					// "relativní hmotnost"
-					if ($(s).data('clicked')) {
-						m = 0;
-					} else if ($(o).data('clicked')) {
-						m = 1;
-					} else {
-						m = .5;
-					}
+        if (false) {
 
-			 		//změna rychlosti
-					$(s).data('v', {
-						x: (sv.x+2*m*dv*G.cos)*sco,
-						y: (sv.y+2*m*dv*G.sin)*sco
-					});
-					$(o).data('v', {
-						x: (ov.x-2*(1-m)*dv*G.cos)*oco,
-						y: (ov.y-2*(1-m)*dv*G.sin)*oco
-					});
-					return true;
-				}
-				return false;
-			});
-			move = move && !collided;
+            oo.each(function(){
+                var collided =
+                $(this).handleCollision(s, function(o, G){
+                    if (G.overlap && !G.ident) {
+                        var sv = $(s).data('v'), ov = $(o).data('v'),
+                            sco = Coeff(sv),
+                            oco = Coeff(ov),
+                            dv = ov.x*G.cos+ov.y*G.sin-sv.x*G.cos-sv.y*G.sin,
+                            m;
 
-		});
+                        // "relativní hmotnost"
+                        if ($(s).data('clicked')) {
+                            m = 0;
+                        } else if ($(o).data('clicked')) {
+                            m = 1;
+                        } else {
+                            m = .5;
+                        }
 
-		if (!move) {
-			$(this).coords(sCoords);
-		}
+                        //změna rychlosti
+                        $(s).data('v', {
+                            x: (sv.x+2*m*dv*G.cos)*sco,
+                            y: (sv.y+2*m*dv*G.sin)*sco
+                        });
+                        $(o).data('v', {
+                            x: (ov.x-2*(1-m)*dv*G.cos)*oco,
+                            y: (ov.y-2*(1-m)*dv*G.sin)*oco
+                        });
+                        return true;
+                    }
+                    return false;
+                });
+                move = move && !collided;
+            });
+
+            if (!move) {
+                $(this).coords(sCoords);
+            }
+        }
 	}
 
     rinda.initializeTickTimer = function() {
@@ -478,7 +480,8 @@
         if (rinda.lastTimeDelta > 100) rinda.lastTimeDelta = 100;
         if (rinda.canDecreaseFps && rinda.lastTimeDelta > 50) {
             rinda.lastTimeSlownessCount++;
-            rinda.lastTimeSlownessCount == 20 && rinda.decreaseFps()
+            rinda.lastTimeSlownessCount == 20 && rinda.decreaseFps();
+            window.location.hash = rinda.lastTimeSlownessCount;
         }
         var c = 0;
         if (rinda.lastTimeDelta > rinda.tickInterval) {
@@ -488,14 +491,16 @@
         rinda.lastTime = b;
         rinda.globalTime++;
 
+        var oo = o;
 
         o.each(function(){
 			var c = $(this).coords(),
                 v = $(this).data('v');
+            oo = oo.not(this);
 			$(this).tryMove({
 				x: c.x + v.x/rinda.fps,
 				y: c.y + v.y/rinda.fps
-			});
+			},oo);
 		});
 	};
 

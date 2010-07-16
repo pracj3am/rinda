@@ -45,6 +45,6 @@ $(function(){
 	});
 
 	$.start({
-		vmax: 300
+		vmax: 200
 	})
 });
