@@ -249,7 +249,6 @@
 	}
 	
 	$.fn.coords = function(coords, pushed) {
-		var pos = this.data('parent').position();
 		var ocoords = {x: this.data('x'), y: this.data('y'), r: this.data('r')};
 		
 		//objekt je chtěn na nové pozici
@@ -462,8 +461,7 @@
 	}
 
 	$.fn.frameChange = function() {
-		var o = this;
-		this.each(function(index){
+		this.each(function(){
 			var c = $(this).coords();
 			$(this).tryMove({
 				x: c.x + $(this).data('v').x,
