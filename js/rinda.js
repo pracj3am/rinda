@@ -115,6 +115,7 @@
 				v: {x: 0, y: 0},
 				dragged: false,
 				clicked: false,
+                parent: $(p),
 				containmentH: $('<div/>').css({
 					position: 'absolute', 
 					width: cw-2*r*hoverOpt.mag, 
@@ -134,9 +135,9 @@
 		}).hover(function(){
 			if (!$(this).data('clicked')) {
 				$(this).grow(hoverOpt);
-				$(this).parent().draggable('option', 'containment', $(this).data('containmentH'));
+				$(this).data('parent').draggable('option', 'containment', $(this).data('containmentH'));
 			} else {
-				$(this).parent().draggable('option', 'containment', $(this).data('containmentC'));
+				$(this).data('parent').draggable('option', 'containment', $(this).data('containmentC'));
 			}
 		},function(){
 			if (!$(this).data('clicked')) {
@@ -240,13 +241,15 @@
 	}
 	
 	$.fn.bringOnTop = function() {
-		o.parent().css({zIndex: 99});
-		this.parent().css({zIndex: 100});
+		o.each(function(){
+            $(this).data('parent').css({zIndex: 99});
+        });
+		this.data('parent').css({zIndex: 100});
 		return this;
 	}
 	
 	$.fn.coords = function(coords, pushed) {
-		var pos = this.parent().position();
+		var pos = this.data('parent').position();
 		var ocoords = {x: this.data('x'), y: this.data('y'), r: this.data('r')};
 		
 		//objekt je chtěn na nové pozici
@@ -332,7 +335,7 @@
 				ncoords = {x: x0, y: y0, r: coords.r};
 			}			
 			
-			this.parent().css({left: ncoords.x, top: ncoords.y});
+			this.data('parent').css({left: ncoords.x, top: ncoords.y});
 			this.data('x', ncoords.x);
 			this.data('y', ncoords.y);
 			
