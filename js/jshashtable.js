@@ -48,13 +48,8 @@ var Hashtable = (function() {
 		};
 
 	function hashObject(obj) {
-		var hashCode;
 		if (typeof obj == "string") {
 			return obj;
-		} else if (typeof obj.hashCode == FUNCTION) {
-			// Check the hashCode method really has returned a string
-			hashCode = obj.hashCode();
-			return (typeof hashCode == "string") ? hashCode : hashObject(hashCode);
 		} else if (typeof obj.toString == FUNCTION) {
 			return obj.toString();
 		} else {
@@ -68,46 +63,23 @@ var Hashtable = (function() {
 		}
 	}
 
-	function equals_fixedValueHasEquals(fixedValue, variableValue) {
-		return fixedValue.equals(variableValue);
+	function equals(fixedValue, variableValue) {
+		return (fixedValue == variableValue);
 	}
-
-	function equals_fixedValueNoEquals(fixedValue, variableValue) {
-		return (typeof variableValue.equals == FUNCTION) ?
-			   variableValue.equals(fixedValue) : (fixedValue === variableValue);
-	}
-
-	function createKeyValCheck(kvStr) {
-		return function(kv) {
-			if (kv === null) {
-				throw new Error("null is not a valid " + kvStr);
-			} else if (typeof kv == "undefined") {
-				throw new Error(kvStr + " must not be undefined");
-			}
-		};
-	}
-
-	var checkKey = createKeyValCheck("key"), checkValue = createKeyValCheck("value");
 
 	/*----------------------------------------------------------------------------------------------------------------*/
 
-	function Bucket(hash, firstKey, firstValue, equalityFunction) {
+	function Bucket(hash, firstKey, firstValue) {
         this[0] = hash;
 		this.entries = [];
 		this.addEntry(firstKey, firstValue);
-
-		if (equalityFunction !== null) {
-			this.getEqualityFunction = function() {
-				return equalityFunction;
-			};
-		}
 	}
 
 	var EXISTENCE = 0, ENTRY = 1, ENTRY_INDEX_AND_VALUE = 2;
 
 	function createBucketSearcher(mode) {
 		return function(key) {
-			var i = this.entries.length, entry, equals = this.getEqualityFunction(key);
+			var i = this.entries.length, entry;
 			while (i--) {
 				entry = this.entries[i];
 				if ( equals(key, entry[0]) ) {
@@ -135,10 +107,6 @@ var Hashtable = (function() {
 	}
 
 	Bucket.prototype = {
-		getEqualityFunction: function(searchValue) {
-			return (typeof searchValue.equals == FUNCTION) ? equals_fixedValueHasEquals : equals_fixedValueNoEquals;
-		},
-
 		getEntryForKey: createBucketSearcher(ENTRY),
 
 		getEntryAndIndexForKey: createBucketSearcher(ENTRY_INDEX_AND_VALUE),
@@ -205,17 +173,14 @@ var Hashtable = (function() {
 
 	/*----------------------------------------------------------------------------------------------------------------*/
 
-	function Hashtable(hashingFunctionParam, equalityFunctionParam) {
+	function Hashtable() {
 		var that = this;
 		var buckets = [];
 		var bucketsByHash = {};
 
-		var hashingFunction = (typeof hashingFunctionParam == FUNCTION) ? hashingFunctionParam : hashObject;
-		var equalityFunction = (typeof equalityFunctionParam == FUNCTION) ? equalityFunctionParam : null;
+		var hashingFunction = hashObject;
 
 		this.put = function(key, value) {
-			checkKey(key);
-			checkValue(value);
 			var hash = hashingFunction(key), bucket, bucketEntry, oldValue = null;
 
 			// Check if a bucket exists for the bucket key
@@ -233,7 +198,7 @@ var Hashtable = (function() {
 				}
 			} else {
 				// No bucket exists for the key, so create one and put our key/value mapping in
-				bucket = new Bucket(hash, key, value, equalityFunction);
+				bucket = new Bucket(hash, key, value);
 				buckets[buckets.length] = bucket;
 				bucketsByHash[hash] = bucket;
 			}
@@ -241,8 +206,6 @@ var Hashtable = (function() {
 		};
 
 		this.get = function(key) {
-			checkKey(key);
-
 			var hash = hashingFunction(key);
 
 			// Check if a bucket exists for the bucket key
@@ -360,7 +323,7 @@ var Hashtable = (function() {
 		};
 
 		this.clone = function() {
-			var clone = new Hashtable(hashingFunctionParam, equalityFunctionParam);
+			var clone = new Hashtable();
 			clone.putAll(that);
 			return clone;
 		};
