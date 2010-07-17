@@ -14,7 +14,8 @@
 		sqrt = Math.sqrt, abs = Math.abs, //aliases
 		canvas, cw,	ch,	o,
 		rinda = {},
-        C = [30, 20, 15];
+        C = [30, 20, 15],
+        H = new Hashtable;
 
 	var Mouse = {
 		reset: function(e) {
@@ -57,7 +58,7 @@
 				vmax = settings.vmax;
 
 			o.each(function(){
-				$(this).data('v', {
+				$(this).rindata('v', {
 					x: vmax*Math.random()-vmax/2, y: vmax*Math.random()-vmax/2
 				});
 			});
@@ -114,7 +115,7 @@
                 left: -r
 			});
 
-			oo.data({
+			oo.rindata({
 				x: oo.position().left,
 				y: oo.position().top,
 				r: r, size: r,
@@ -139,25 +140,25 @@
 			});
 
 		}).unbind().hover(function(){
-			if (!$(this).data('clicked')) {
+			if (!$(this).rindata('clicked')) {
 				$(this).grow(hoverOpt);
-				$(this).draggable('option', 'containment', $(this).data('containmentH'));
+				$(this).draggable('option', 'containment', $(this).rindata('containmentH'));
 			} else {
-				$(this).draggable('option', 'containment', $(this).data('containmentC'));
+				$(this).draggable('option', 'containment', $(this).rindata('containmentC'));
 			}
 		},function(){
-			if (!$(this).data('clicked')) {
+			if (!$(this).rindata('clicked')) {
 				$(this).ungrow(unHoverOpt);
 			}
 		}).click(function(){
 
-			if (!$(this).data('clicked')) {
-				$(this).data('clicked', true).grow(clickOpt);
+			if (!$(this).rindata('clicked')) {
+				$(this).rindata('clicked', true).grow(clickOpt);
 			}
             oo = this;
 			o.each(function(){
-				if ($(this).data('clicked') && this!=oo) {
-					$(this).data('clicked', false).ungrow(unClickOpt);
+				if ($(this).rindata('clicked') && this!=oo) {
+					$(this).rindata('clicked', false).ungrow(unClickOpt);
 				}
 			});
 
@@ -166,50 +167,50 @@
 			scroll: false,
 			start: function(e) {
 				$(this).bringOnTop();
-				$(this).data('dragged', true);
+				$(this).rindata('dragged', true);
 			},
 			drag: function(e) {
 				var pos = $(this).position();
 				Mouse.move(e);
-				$(this).data('x', pos.left);
-				$(this).data('y', pos.top);
-				$(this).data('v', {x: 0, y: 0});
+				$(this).rindata('x', pos.left);
+				$(this).rindata('y', pos.top);
+				$(this).rindata('v', {x: 0, y: 0});
 				$(this).preventCollision(o);
 			},
 			stop: function(e) {
 				var pos = $(this).position();
 				Mouse.move(e);
-				$(this).data('x', pos.left);
-				$(this).data('y', pos.top);
-				$(this).data('v', {x: Mouse.vx, y: Mouse.vy});
-				$(this).data('dragged', false);
+				$(this).rindata('x', pos.left);
+				$(this).rindata('y', pos.top);
+				$(this).rindata('v', {x: Mouse.vx, y: Mouse.vy});
+				$(this).rindata('dragged', false);
 			}
 		}).mousedown(function(e){
 			Mouse.reset(e);
-			$(this).data('v', {x: 0, y: 0});
+			$(this).rindata('v', {x: 0, y: 0});
 		}).mouseup(function(e){
 			//Mouse.move(e);
 			//alert('up'+Mouse.vx);
-			//$(this).children().data('v', {x: Mouse.vx, y: Mouse.vy});
+			//$(this).children().rindata('v', {x: Mouse.vx, y: Mouse.vy});
 		});
 
 	}
 
 	$.fn.grow = function(opts) {
-		var c = this.data('c'),
+		var c = this.rindata('c'),
             oo = this;
         opts.start(c);
         this.bringOnTop();
 
 		c.stop().animate({
-			width: opts.mag*oo.data('size')*2,
-			height: opts.mag*oo.data('size')*2,
-			top: -opts.mag/2*oo.data('size')*2,
-			left: -opts.mag/2*oo.data('size')*2
+			width: opts.mag*oo.rindata('size')*2,
+			height: opts.mag*oo.rindata('size')*2,
+			top: -opts.mag/2*oo.rindata('size')*2,
+			left: -opts.mag/2*oo.rindata('size')*2
 		},{
 			duration: opts.speed,
 			step: function(){
-				oo.data('r', c.width()/2);
+				oo.rindata('r', c.width()/2);
 				var xy = oo.coords();
 				oo.coords({ // to be inside canvas
 					x: Math.max(Math.min(cw-xy.r, xy.x),xy.r),
@@ -219,7 +220,7 @@
 				opts.step(c);
 			},
 			complete: function() {
-				oo.data('r', c.width()/2);
+				oo.rindata('r', c.width()/2);
 				opts.complete(c);
 			}
 		});
@@ -228,23 +229,23 @@
 	}
 
 	$.fn.ungrow = function(opts) {
-		var c = this.data('c'),
+		var c = this.rindata('c'),
             oo = this;
 		opts.start(c);
 
 		c.stop().animate({
-			width: oo.data('size')*2,
-			height: oo.data('size')*2,
-			top: -oo.data('size'),
-			left: -oo.data('size')
+			width: oo.rindata('size')*2,
+			height: oo.rindata('size')*2,
+			top: -oo.rindata('size'),
+			left: -oo.rindata('size')
 		}, {
 			duration: opts.speed,
 			step: function() {
-				oo.data('r', c.width()/2);
+				oo.rindata('r', c.width()/2);
 				opts.step(c);
 			},
 			complete: function() {
-				oo.data('r', c.width()/2);
+				oo.rindata('r', c.width()/2);
 				opts.complete(c);
 			}
 		});
@@ -260,7 +261,7 @@
 	}
 
 	$.fn.coords = function(coords, pushed) {
-		var ocoords = {x: this.data('x'), y: this.data('y'), r: this.data('r')};
+		var ocoords = {x: this.rindata('x'), y: this.rindata('y'), r: this.rindata('r')};
 
 		//objekt je chtěn na nové pozici
 		if (typeof coords == 'object') {
@@ -276,19 +277,19 @@
 				ncoords = coords;
 			} else {
 				// změna rychlosti
-				var c = Coeff(this.data('v'));
+				var c = Coeff(this.rindata('v'));
 				if (coords.y-r<0) {
 					//horní strana
-					this.data('v', {x: this.data('v').x, y: -this.data('v').y*c});
+					this.rindata('v', {x: this.rindata('v').x, y: -this.rindata('v').y*c});
 				} else if (coords.y+r>ch) {
 					//dolní strana
-					this.data('v', {x: this.data('v').x, y: -this.data('v').y*c});
+					this.rindata('v', {x: this.rindata('v').x, y: -this.rindata('v').y*c});
 				} else if (coords.x-r<0) {
 					//levá strana
-					this.data('v', {x: -this.data('v').x*c, y: this.data('v').y});
+					this.rindata('v', {x: -this.rindata('v').x*c, y: this.rindata('v').y});
 				} else if (coords.x+r>cw){
 					//pravá strana
-					this.data('v', {x: -this.data('v').x*c, y: this.data('v').y});
+					this.rindata('v', {x: -this.rindata('v').x*c, y: this.rindata('v').y});
 				}
 
 				if (pushed == true) {//nové místo hledáme, jen když je něčím tlačena
@@ -346,8 +347,8 @@
 			}
 
 			this.css({left: ncoords.x, top: ncoords.y});
-			this.data('x', ncoords.x);
-			this.data('y', ncoords.y);
+			this.rindata('x', ncoords.x);
+			this.rindata('y', ncoords.y);
 
 			return moved;
 		}
@@ -419,7 +420,7 @@
 	}
 
 	$.fn.tryMove = function(coords, oo) {
-		if (this.data('dragged')) {
+		if (this.rindata('dragged')) {
 			return;
 		}
 
@@ -435,27 +436,27 @@
                 var collided =
                 $(this).handleCollision(s, function(o, G){
                     if (G.overlap && !G.ident) {
-                        var sv = $(s).data('v'), ov = $(o).data('v'),
+                        var sv = $(s).rindata('v'), ov = $(o).rindata('v'),
                             sco = Coeff(sv),
                             oco = Coeff(ov),
                             dv = ov.x*G.cos+ov.y*G.sin-sv.x*G.cos-sv.y*G.sin,
                             m;
 
                         // "relativní hmotnost"
-                        if ($(s).data('clicked')) {
+                        if ($(s).rindata('clicked')) {
                             m = 0;
-                        } else if ($(o).data('clicked')) {
+                        } else if ($(o).rindata('clicked')) {
                             m = 1;
                         } else {
                             m = .5;
                         }
 
                         //změna rychlosti
-                        $(s).data('v', {
+                        $(s).rindata('v', {
                             x: (sv.x+2*m*dv*G.cos)*sco,
                             y: (sv.y+2*m*dv*G.sin)*sco
                         });
-                        $(o).data('v', {
+                        $(o).rindata('v', {
                             x: (ov.x-2*(1-m)*dv*G.cos)*oco,
                             y: (ov.y-2*(1-m)*dv*G.sin)*oco
                         });
@@ -471,6 +472,26 @@
             }
         }
 	}
+
+    $.fn.rindata = function (key, value) {
+        if (typeof key == 'object') {
+            H.put(this[0], key);
+        } else {
+            var d = H.get(this[0]);
+            if (typeof value == 'undefined') {
+                if (d != null && typeof d == 'object') return d[key];
+                return null;
+            } else {
+                if (d != null && typeof d == 'object') {
+                    d[key] = value;
+                } else {
+                    d = new Object;
+                    d[key] = value;
+                }
+                H.put(this[0], d)
+            }
+        }
+    }
 
     rinda.initializeTickTimer = function() {
         window.clearInterval(rinda.tickTimer);
@@ -504,7 +525,7 @@
         var oo = o;
         o.each(function(){
 			var co = $(this).coords(),
-                v = $(this).data('v');
+                v = $(this).rindata('v');
             //oo = oo.not(this);
 			$(this).tryMove({
 				x: co.x + v.x/rinda.fps*(1+c),
