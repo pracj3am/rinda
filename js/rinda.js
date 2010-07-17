@@ -14,7 +14,7 @@
 		sqrt = Math.sqrt, abs = Math.abs, //aliases
 		canvas, cw,	ch,	o,
 		rinda = {},
-        C = [90, 45, 30, 20, 15];
+        C = [30, 20, 15];
 
 	var Mouse = {
 		reset: function(e) {
@@ -108,9 +108,10 @@
 				zIndex: 99
 			});
 
-			c.position({
-				my: 'center center',
-				of: this
+			c.css({
+				position: 'relative',
+				top: -r,
+                left: -r
 			});
 
 			oo.data({
@@ -487,10 +488,10 @@
         var b = (new Date).getTime();
         rinda.lastTimeDelta += b - rinda.lastTime - rinda.tickInterval;
         if (rinda.lastTimeDelta > 100) rinda.lastTimeDelta = 100;
-        if (rinda.canDecreaseFps && rinda.lastTimeDelta > 50) {
+        if (rinda.lastTimeDelta > 50) {
             rinda.lastTimeSlownessCount++;
-            rinda.lastTimeSlownessCount == 20 && rinda.decreaseFps();
-            window.location.hash = rinda.lastTimeSlownessCount;
+            rinda.lastTimeSlownessCount == 20 && rinda.canDecreaseFps && rinda.decreaseFps();
+            window.location.hash = rinda.fps+':'+rinda.lastTimeSlownessCount;
         }
         var c = 0;
         if (rinda.lastTimeDelta > rinda.tickInterval) {
