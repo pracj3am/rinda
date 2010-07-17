@@ -101,7 +101,7 @@
                 return this.objectId;
             }
 
-            if (typeof o == 'undefined') {
+            if (o == undefined) {
                 o = $(this);
             } else {
                 o = o.add(this);
@@ -271,7 +271,7 @@
 
 		//objekt je chtěn na nové pozici
 		if (typeof coords == 'object') {
-			if (typeof coords.r == 'undefined')
+			if (coords.r == undefined)
 				coords.r = ocoords.r;
 
 			var ncoords = {}, //nová poloha
@@ -484,7 +484,7 @@
             D[this[0].toString()] = key;
         } else {
             var d = D[this[0].toString()];
-            if (typeof value == 'undefined') {
+            if (value == undefined) {
                 if (d) return d[key];
                 return null;
             } else {
@@ -495,6 +495,7 @@
                     d[key] = value;
                 }
                 D[this[0].toString()] = d;
+                return this;
             }
         }
     }
