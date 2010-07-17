@@ -77,26 +77,6 @@ var Hashtable = (function() {
 
 	var EXISTENCE = 0, ENTRY = 1, ENTRY_INDEX_AND_VALUE = 2;
 
-	function createBucketSearcher(mode) {
-		return function(key) {
-			var i = this.entries.length, entry;
-			while (i--) {
-				entry = this.entries[i];
-				if ( equals(key, entry[0]) ) {
-					switch (mode) {
-						case EXISTENCE:
-							return true;
-						case ENTRY:
-							return entry;
-						case ENTRY_INDEX_AND_VALUE:
-							return [ i, entry[1] ];
-					}
-				}
-			}
-			return false;
-		};
-	}
-
 	function createBucketLister(entryProperty) {
 		return function(aggregatedArr) {
 			var startIndex = aggregatedArr.length;
@@ -107,12 +87,26 @@ var Hashtable = (function() {
 	}
 
 	Bucket.prototype = {
-		getEntryForKey: createBucketSearcher(ENTRY),
-
-		getEntryAndIndexForKey: createBucketSearcher(ENTRY_INDEX_AND_VALUE),
+        getEntry: function(mode, key) {
+            var i = this.entries.length, entry;
+            while (i--) {
+                entry = this.entries[i];
+                if ( equals(key, entry[0]) ) {
+                    switch (mode) {
+                        case EXISTENCE:
+                            return true;
+                        case ENTRY:
+                            return entry;
+                        case ENTRY_INDEX_AND_VALUE:
+                            return [ i, entry[1] ];
+                    }
+                }
+            }
+            return false;
+        },
 
 		removeEntryForKey: function(key) {
-			var result = this.getEntryAndIndexForKey(key);
+			var result = this.getEntry(ENTRY_INDEX_AND_VALUE, key);
 			if (result) {
 				arrayRemoveAt(this.entries, result[0]);
 				return result[1];
@@ -135,8 +129,6 @@ var Hashtable = (function() {
 				entries[startIndex + i] = this.entries[i].slice(0);
 			}
 		},
-
-		containsKey: createBucketSearcher(EXISTENCE),
 
 		containsValue: function(value) {
 			var i = this.entries.length;
@@ -187,7 +179,7 @@ var Hashtable = (function() {
 			bucket = getBucketForHash(bucketsByHash, hash);
 			if (bucket) {
 				// Check this bucket to see if it already contains this key
-				bucketEntry = bucket.getEntryForKey(key);
+				bucketEntry = bucket.getEntry(ENTRY, key);
 				if (bucketEntry) {
 					// This bucket entry is the current mapping of key to value, so replace old value and we're done.
 					oldValue = bucketEntry[1];
@@ -212,23 +204,13 @@ var Hashtable = (function() {
 			var bucket = getBucketForHash(bucketsByHash, hash);
 			if (bucket) {
 				// Check this bucket to see if it contains this key
-				var bucketEntry = bucket.getEntryForKey(key);
+				var bucketEntry = bucket.getEntry(ENTRY, key);
 				if (bucketEntry) {
 					// This bucket entry is the current mapping of key to value, so return the value.
 					return bucketEntry[1];
 				}
 			}
 			return null;
-		};
-
-		this.containsKey = function(key) {
-			checkKey(key);
-			var bucketKey = hashingFunction(key);
-
-			// Check if a bucket exists for the bucket key
-			var bucket = getBucketForHash(bucketsByHash, bucketKey);
-
-			return bucket ? bucket.containsKey(key) : false;
 		};
 
 		this.containsValue = function(value) {
