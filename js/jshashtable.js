@@ -48,11 +48,9 @@ var Hashtable = (function() {
 		};
 
 	function hashObject(obj) {
-		if (typeof obj == "string") {
-			return obj;
-		} else if (typeof obj.toString == FUNCTION) {
+        try {
 			return obj.toString();
-		} else {
+		} catch (ex) {
 			try {
 				return String(obj);
 			} catch (ex) {
@@ -64,7 +62,7 @@ var Hashtable = (function() {
 	}
 
 	function equals(fixedValue, variableValue) {
-		return (fixedValue == variableValue);
+		return true; // hashcodes must be unique! (fixedValue == variableValue);//true;
 	}
 
 	/*----------------------------------------------------------------------------------------------------------------*/

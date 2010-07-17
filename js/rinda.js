@@ -88,12 +88,17 @@
 
 		this.wrap('<div/>');
 
-
+        var id = 0;
+        
 		this.parent().each(function(){
 			var oo = $(this),
                 c = $(this).children(),
 				r = c.width()/2;
 
+            this.objectId = '<#MyObject:' + (id++) + '>';
+            this.toString = function() {
+                return this.objectId;
+            }
 
             if (typeof o == 'undefined') {
                 o = $(this);
