@@ -15,7 +15,8 @@
 		canvas, cw,	ch,	o,
 		rinda = {},
         C = [30, 20, 15],
-        H = new Hashtable;
+        id = 0,
+        D = new Array;
 
 	var Mouse = {
 		reset: function(e) {
@@ -81,10 +82,10 @@
 	}
 
 	$.fn.circle = function(hoverOptions, unHoverOptions, clickOptions, unClickOptions) {
-		hoverOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, hoverOptions);
-		unHoverOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unHoverOptions);
-		clickOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){} }, clickOptions);
-		unClickOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){} }, unClickOptions);
+		hoverOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){}}, hoverOptions);
+		unHoverOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){}}, unHoverOptions);
+		clickOpt = $.extend({mag: 2, speed: 400, start: function(){}, step: function(){}, complete: function(){}}, clickOptions);
+		unClickOpt = $.extend({speed: 400, start: function(){}, step: function(){}, complete: function(){}}, unClickOptions);
 
 		this.wrap('<div/>');
 
@@ -95,7 +96,7 @@
                 c = $(this).children(),
 				r = c.width()/2;
 
-            this.objectId = '<#MyObject:' + (id++) + '>';
+            this.objectId = (id++);
             this.toString = function() {
                 return this.objectId;
             }
@@ -480,20 +481,20 @@
 
     $.fn.rindata = function (key, value) {
         if (typeof key == 'object') {
-            H.put(this[0], key);
+            D[this[0].toString()] = key;
         } else {
-            var d = H.get(this[0]);
+            var d = D[this[0].toString()];
             if (typeof value == 'undefined') {
-                if (d != null && typeof d == 'object') return d[key];
+                if (d) return d[key];
                 return null;
             } else {
-                if (d != null && typeof d == 'object') {
+                if (d) {
                     d[key] = value;
                 } else {
                     d = new Object;
                     d[key] = value;
                 }
-                H.put(this[0], d)
+                D[this[0].toString()] = d;
             }
         }
     }
